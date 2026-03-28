@@ -6,4 +6,7 @@ import java.util.List;
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
     List<Application> findByJobId(Long jobId);
     List<Application> findByCandidateId(Long candidateId);
+    long countByJobId(Long jobId);
+    List<Application> findAllByOrderByAppliedDateDesc();
+    void deleteByCandidateId(Long candidateId);
 }

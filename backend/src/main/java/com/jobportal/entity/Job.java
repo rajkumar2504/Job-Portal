@@ -1,4 +1,5 @@
 package com.jobportal.entity;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -6,6 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "jobs")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -33,6 +35,7 @@ public class Job {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recruiter_id", nullable = false)
+    @JsonIgnoreProperties({"password", "createdAt", "hibernateLazyInitializer", "handler"})
     private User recruiter;
 
     @CreationTimestamp

@@ -1,6 +1,7 @@
 package com.jobportal.controller;
 
 import com.jobportal.dto.ApplicationDto;
+import com.jobportal.dto.ApplicationStatusUpdateRequest;
 import com.jobportal.entity.Application;
 import com.jobportal.entity.ApplicationStatus;
 import com.jobportal.entity.Job;
@@ -48,5 +49,37 @@ public class ApplicationController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User candidate = userRepository.findByEmail(email).orElseThrow();
         return ResponseEntity.ok(applicationRepository.findByCandidateId(candidate.getId()));
+    }
+
+    @GetMapping("/job/{jobId}")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<List<Application>> getApplicationsForJob(@PathVariable Long jobId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User recruiter = userRepository.findByEmail(email).orElseThrow();
+        Job job = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("Job not found"));
+
+        if (!job.getRecruiter().getId().equals(recruiter.getId())) {
+            throw new RuntimeException("You can only view applications for your own jobs");
+        }
+
+        return ResponseEntity.ok(applicationRepository.findByJobId(jobId));
+    }
+
+    @PutMapping("/{applicationId}/status")
+    @PreAuthorize("hasRole('RECRUITER')")
+    public ResponseEntity<Application> updateApplicationStatus(
+            @PathVariable Long applicationId,
+            @RequestBody ApplicationStatusUpdateRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User recruiter = userRepository.findByEmail(email).orElseThrow();
+        Application application = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+
+        if (!application.getJob().getRecruiter().getId().equals(recruiter.getId())) {
+            throw new RuntimeException("You can only update applications for your own jobs");
+        }
+
+        application.setStatus(request.getStatus());
+        return ResponseEntity.ok(applicationRepository.save(application));
     }
 }

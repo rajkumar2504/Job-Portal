@@ -1,6 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Building, MapPin, DollarSign, Briefcase, FileText } from 'lucide-react';
+import api from '../api';
+
+const formatSalary = (salary) => new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+}).format(Number(salary ?? 0));
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -10,33 +17,32 @@ export default function JobDetails() {
   const [applying, setApplying] = useState(false);
 
   useEffect(() => {
-    // Mock fetch job details
-    setJob({ 
-      id, 
-      title: 'Frontend Developer', 
-      company: 'TechCorp', 
-      location: 'Remote', 
-      salary: 120000, 
-      description: 'We are looking for a skilled React developer to join our team. You will be responsible for building beautiful user interfaces. Requirements: 3+ years experience, React, Vite, CSS.',
-      postedAt: '2 days ago'
-    });
+    api.get(`/jobs/${id}`)
+      .then((res) => setJob(res.data))
+      .catch((err) => console.error('Error fetching job details:', err));
   }, [id]);
 
-  const handleApply = (e) => {
+  const handleApply = async (e) => {
     e.preventDefault();
     const role = localStorage.getItem('role');
     if (!role) {
-      alert("Please login as a candidate to apply.");
+      alert('Please login as a candidate to apply.');
       navigate('/login');
       return;
     }
     if (role !== 'CANDIDATE') {
-      alert("Only candidates can apply to jobs.");
+      alert('Only candidates can apply to jobs.');
       return;
     }
-    
-    alert(`Application submitted successfully to ${job.title}!`);
-    setApplying(false);
+
+    try {
+      await api.post('/applications', { jobId: job.id, resumeUrl });
+      alert(`Application submitted successfully to ${job.title}!`);
+      setApplying(false);
+    } catch (err) {
+      alert('Error submitting application');
+      console.error(err);
+    }
   };
 
   if (!job) return <div>Loading...</div>;
@@ -48,17 +54,17 @@ export default function JobDetails() {
         <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', color: '#4b5563', marginBottom: '1.5rem' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Building size={18} /> {job.company}</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><MapPin size={18} /> {job.location}</span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><DollarSign size={18} /> ${job.salary.toLocaleString()}/yr</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><DollarSign size={18} /> {formatSalary(job.salary)} per year</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Briefcase size={18} /> Full-time</span>
         </div>
-        
+
         {!applying ? (
           <button className="btn" onClick={() => setApplying(true)} style={{ fontSize: '1.1rem', padding: '0.75rem 2rem' }}>Apply Now</button>
         ) : (
           <form onSubmit={handleApply} style={{ background: '#f9fafb', padding: '1.5rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb', marginTop: '1rem' }}>
             <h3 style={{ marginTop: 0 }}>Submit Application</h3>
             <div className="form-group">
-              <label><FileText size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }}/> Resume URL</label>
+              <label><FileText size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Resume URL</label>
               <input type="url" value={resumeUrl} onChange={e => setResumeUrl(e.target.value)} required placeholder="https://drive.google.com/..." />
             </div>
             <div style={{ display: 'flex', gap: '1rem' }}>
