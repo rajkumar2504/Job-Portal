@@ -404,15 +404,17 @@ Deploy the `dist` output to a static host.
 
 ## 17. Current Limitations
 
-- No default `ADMIN` account is seeded yet
-- No default `CANDIDATE` account is seeded yet
-- Admin backend operations are still pending
+- Public registration can still assign elevated roles if a client submits them directly
+- Duplicate job applications are not blocked yet
+- Backend test coverage is minimal
 - Running the frontend without the backend will show job-loading errors because jobs are fetched from the API
 
 ## 18. Suggested Next Improvements
 
-1. Seed default `ADMIN` and `CANDIDATE` accounts in SQL
-2. Add admin management APIs
-3. Add backend tests
-4. Add frontend integration tests
-5. Add recruiter analytics and candidate profile views
+1. Prevent role escalation during registration by forcing public signup to `CANDIDATE`
+2. Add duplicate-application protection so candidates cannot apply to the same job repeatedly
+3. Add backend tests for auth, recruiter flows, candidate flows, and admin management
+4. Add frontend integration tests for login, protected routes, posting jobs, applying, and admin actions
+5. Add recruiter analytics and candidate profile management views
+6. Improve DTO validation and structured API error responses
+7. Clean up production readiness by removing sensitive local fallback credentials and tightening demo seed behavior
